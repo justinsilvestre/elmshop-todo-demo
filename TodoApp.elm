@@ -1,13 +1,10 @@
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Signal exposing (Address)
 
-import StartApp.Simple as StartApp
+import Html.App as App
 import Html exposing (..)
 import Html.Attributes exposing (..)
-
-import OnInput exposing (..)
 
 -- MODEL
 
@@ -36,7 +33,7 @@ initialModel = {
 
 -- UPDATE
 
-type Action
+type Message
   = NoOp
   | ToggleCompleted Int
   | DeleteTask Int
@@ -44,8 +41,8 @@ type Action
   | AddTask
   | UpdateTaskInput String
 
-update action model =
-  case action of
+update message model =
+  case message of
     NoOp ->
       model
 
@@ -83,11 +80,11 @@ crossedOut completed = case completed of
   False -> style [ ]
 
 
-taskLi address task = li
-  [ crossedOut task.completed, onClick address (ToggleCompleted task.id) ]
+taskLi task = li
+  [ crossedOut task.completed, onClick (ToggleCompleted task.id) ]
   [ text task.name ]
 
-filterVisibleTasks address model =
+filterVisibleTasks model =
   case model.filter of
     All ->
       model.tasks
@@ -97,28 +94,28 @@ filterVisibleTasks address model =
       List.filter (\t -> t.completed == False) model.tasks 
 
 
-taskList address model = ul [ ] (List.map (taskLi address) (filterVisibleTasks address model))
+taskList model = ul [ ] (List.map (taskLi) (filterVisibleTasks model))
 
 
-taskForm address = div [ ] [
-  input [ type' "text", onInput address UpdateTaskInput ] [ ],
-  button [ onClick address AddTask ] [ text "Add Task" ]
+taskForm model = div [ ] [
+  input [ type' "text", onInput UpdateTaskInput, value model.taskInput ] [ ],
+  button [ onClick AddTask ] [ text "Add Task" ]
   ]
 
 
-filterButtons address= div [ ] [
-  button [ onClick address (Filter All) ] [ text "All" ],
-  button [ onClick address (Filter Pending) ] [ text "Pending" ],
-  button [ onClick address (Filter Completed) ] [ text "Completed" ]
+filterButtons= div [ ] [
+  button [ onClick (Filter All) ] [ text "All" ],
+  button [ onClick (Filter Pending) ] [ text "Pending" ],
+  button [ onClick (Filter Completed) ] [ text "Completed" ]
   ]
 
-view address model = div [ ] [
-  taskList address model,
-  taskForm address,
-  filterButtons address
+view model = div [ ] [
+  taskList model,
+  taskForm model,
+  filterButtons
   ]
 
-main =  StartApp.start
+main =  App.beginnerProgram
   { model = initialModel,
     view = view,
     update = update
