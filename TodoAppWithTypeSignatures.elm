@@ -19,6 +19,14 @@ type TaskFilter
   | Completed
   | Pending
 
+type alias Model = {
+       tasks : List Task,
+      filter : TaskFilter,
+      nextId : Int,
+   taskInput : String
+  }
+
+initialModel : Model
 initialModel = {
   tasks = [
     Task "get milk" True 1,
@@ -30,7 +38,6 @@ initialModel = {
   taskInput = ""
   }
 
-
 -- UPDATE
 
 type Message
@@ -41,6 +48,7 @@ type Message
   | AddTask
   | UpdateTaskInput String
 
+update : Message -> Model -> Model
 update message model =
   case message of
     NoOp ->
@@ -75,15 +83,18 @@ update message model =
 
 -- VIEW
 
+crossedOut : Bool -> Attribute Message
 crossedOut completed = case completed of
   True -> style [ ("text-decoration", "line-through") ]
   False -> style [ ]
 
 
+taskLi : Task -> Html Message
 taskLi task = li
   [ crossedOut task.completed, onClick (ToggleCompleted task.id) ]
   [ text task.name ]
 
+filterVisibleTasks : Model -> List Task
 filterVisibleTasks model =
   case model.filter of
     All ->
@@ -93,28 +104,30 @@ filterVisibleTasks model =
     Pending ->
       List.filter (\t -> t.completed == False) model.tasks 
 
-
+taskList : Model -> Html Message
 taskList model = ul [ ] (List.map (taskLi) (filterVisibleTasks model))
 
-
+taskForm : Model -> Html Message
 taskForm model = div [ ] [
   input [ type' "text", onInput UpdateTaskInput, value model.taskInput ] [ ],
   button [ onClick AddTask ] [ text "Add Task" ]
   ]
 
-
+filterButtons : Html Message
 filterButtons = div [ ] [
   button [ onClick (Filter All) ] [ text "All" ],
   button [ onClick (Filter Pending) ] [ text "Pending" ],
   button [ onClick (Filter Completed) ] [ text "Completed" ]
   ]
 
+view : Model -> Html Message
 view model = div [ ] [
   taskList model,
   taskForm model,
   filterButtons
   ]
 
+main : Program Never
 main =  App.beginnerProgram
   { model = initialModel,
     view = view,
